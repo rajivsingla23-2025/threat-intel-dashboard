@@ -3,5 +3,3 @@ feedparser
 requests
 pandas
 python-dateutil
-python-datetime
-re
