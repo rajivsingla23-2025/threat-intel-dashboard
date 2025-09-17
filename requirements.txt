@@ -3,4 +3,4 @@ feedparser
 requests
 pandas
 python-dateutil
-python-dateutime
+python-datetime
