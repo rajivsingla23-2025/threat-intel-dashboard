@@ -5,6 +5,8 @@ import pandas as pd
 from datetime import datetime
 from dateutil import parser
 import re
+from streamlit_autorefresh import st_autorefresh
+
 
 # -----------------------------
 # FEEDS
@@ -25,9 +27,24 @@ malware_bazaar_api = "https://mb-api.abuse.ch/api/v1/"
 # THREAT ACTOR LIST (expandable)
 # -----------------------------
 threat_actors = [
+    # Existing ones
     "APT28", "APT29", "Lazarus", "Conti", "FIN7", "REvil", "LockBit",
-    "TA505", "Sandworm", "Turla", "Cobalt Group", "DarkSide", "Clop"
+    "TA505", "Sandworm", "Turla", "Cobalt Group", "DarkSide", "Clop",
+
+    # Additional APTs
+    "APT1", "APT3", "APT10", "APT33", "APT34", "APT35", "APT41",
+    "Mustang Panda", "Hafnium", "Gamaredon", "Kimsuky", "Andariel", "BlueNoroff", "MuddyWater",
+
+    # Ransomware gangs
+    "BlackCat", "ALPHV", "Vice Society", "Royal", "Black Basta", "Ragnar Locker", "Maze",
+
+    # Financial / Crime groups
+    "FIN4", "FIN6", "FIN8", "FIN11", "Evil Corp",
+
+    # Others
+    "UNC2452", "Lapsus$", "Killnet"
 ]
+
 
 # -----------------------------
 # HELPERS
@@ -100,8 +117,22 @@ def tag_threat_actor(text):
 # -----------------------------
 # STREAMLIT DASHBOARD
 # -----------------------------
+# st.set_page_config(page_title="Threat Intel Dashboard", layout="wide")
+# st.title("🛡️ Cyber Threat Intelligence Dashboard (Top 50, with CVE & Actor Tags)")
+
 st.set_page_config(page_title="Threat Intel Dashboard", layout="wide")
-st.title("🛡️ Cyber Threat Intelligence Dashboard (Top 50, with CVE & Actor Tags)")
+
+# Auto-refresh every 15 minutes (900,000 ms)
+st_autorefresh(interval=15 * 60 * 1000, key="refresh_dashboard")
+
+st.title("🛡️ Cyber Threat Intelligence Dashboard 🛡️")
+
+# --- Manual Refresh Button ---
+if st.button("🔄 Refresh Now"):
+    try:
+        st.rerun()  # works in latest versions
+    except AttributeError:
+        st.experimental_rerun()  # fallback for older versions
 
 all_entries = []
 for name, url in feeds.items():
@@ -146,3 +177,7 @@ st.write(
 
 # Download button
 st.download_button("Download as CSV", filtered_df.to_csv(index=False), "threat_intel_enriched.csv", "text/csv")
+
+
+
+
