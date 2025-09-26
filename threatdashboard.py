@@ -161,7 +161,8 @@ keyword_filter = st.sidebar.text_input("Search Keyword")
 actor_filter = st.sidebar.multiselect("Threat Actor", df["Threat Actor"].dropna().unique())
 
 # --- Sidebar: Intel Agent ---
-st.sidebar.markdown("## 🤖 Intel Agent")
+st.sidebar.markdown("## :robot_face: Intel Agent")
+
 
 agent_query = st.sidebar.text_area(
     "Ask the agent (in hours or days)",
@@ -211,6 +212,7 @@ st.write(
 
 # Download button
 st.download_button("Download as CSV", filtered_df.to_csv(index=False), "threat_intel_enriched.csv", "text/csv")
+
 
 
 
