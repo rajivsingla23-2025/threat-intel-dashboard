@@ -5,3 +5,5 @@ pandas
 python-dateutil
 tabulate
 streamlit-autorefresh
+requests-cache==1.2.1 ; python_version < "3.13"  # optional if you add it
+openai>=1.50.0     # optional; only if you set OPENAI_API_KEY
