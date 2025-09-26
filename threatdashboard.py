@@ -6,6 +6,7 @@ from datetime import datetime
 from dateutil import parser
 import re
 from streamlit_autorefresh import st_autorefresh
+from agent_runner import run_agent
 
 
 # -----------------------------
@@ -155,9 +156,42 @@ df["CVE Details"] = df["CVEs"].apply(lambda x: [get_cve_details(c) for c in x] i
 df["Title"] = df.apply(lambda row: f"[{row['Title']}]({row['Link']})", axis=1)
 
 # Sidebar search
-st.sidebar.header("Search & Filters")
+st.sidebar.header("🔍 Search & Filters")
 keyword_filter = st.sidebar.text_input("Search Keyword")
 actor_filter = st.sidebar.multiselect("Threat Actor", df["Threat Actor"].dropna().unique())
+
+# --- Sidebar: Intel Agent ---
+st.sidebar.markdown("## 🤖 Intel Agent")
+
+agent_query = st.sidebar.text_area(
+    "Ask the agent (in hours or days)",
+    "Summarize high-risk CVEs from last 48h or 2 days"
+)
+
+approve = st.sidebar.checkbox(
+    "Auto-execute actions (Slack/Jira)",
+    value=False,
+    help="Leave unchecked to run in shadow mode"
+)
+
+if st.sidebar.button("Run Agent"):
+    from agent_runner import run_agent
+    res = run_agent(agent_query, df, approve=approve)
+
+    # Display results in main area
+    st.markdown("## 📝 Agent Summary")
+    st.markdown(res["summary_md"])
+
+    st.markdown("### Proposed Actions")
+    for a in res["actions"]:
+        st.write(f"- {a['title']} → `{a['type']}`")
+
+    if res["executed"]:
+        st.success("Actions executed:")
+        st.json(res["executed"])
+
+    with st.expander("🔍 Agent Audit Trail"):
+        st.json(res["audit"])
 
 filtered_df = df.copy()
 if keyword_filter:
@@ -177,6 +211,8 @@ st.write(
 
 # Download button
 st.download_button("Download as CSV", filtered_df.to_csv(index=False), "threat_intel_enriched.csv", "text/csv")
+
+
 
 
 
