@@ -143,7 +143,7 @@ all_entries.extend(fetch_malwarebazaar())
 df = pd.DataFrame(all_entries)
 
 # Sort by date
-df = df.sort_values(by="Published", ascending=False).head(50)
+df = df.sort_values(by="Published", ascending=False).head(100)
 
 # Add enrichment columns
 df["CVEs"] = df["Title"].apply(extract_cves)
@@ -201,7 +201,7 @@ if actor_filter:
     filtered_df = filtered_df[filtered_df["Threat Actor"].isin(actor_filter)]
 
 # Display
-st.write("### Latest Top 50 Threat Intel Feeds (with CVE & Actor Enrichment)")
+st.write("### Latest Top 100 Threat Intel Feeds (with CVE & Actor Enrichment)")
 st.write("Click on titles to open the original report/sample.")
 
 st.write(
@@ -212,6 +212,7 @@ st.write(
 
 # Download button
 st.download_button("Download as CSV", filtered_df.to_csv(index=False), "threat_intel_enriched.csv", "text/csv")
+
 
 
 
