@@ -165,8 +165,8 @@ st.sidebar.markdown("## 🕵️ Intel Agent")
 
 
 agent_query = st.sidebar.text_area(
-    "Ask the agent (in hours or days)",
-    "Summarize high-risk CVEs from last 48h"
+    "Ask the agent (in hours, days, weeks or month)",
+    "Summarize high-risk CVEs from last 5 days"
 )
 
 approve = st.sidebar.checkbox(
@@ -212,6 +212,7 @@ st.write(
 
 # Download button
 st.download_button("Download as CSV", filtered_df.to_csv(index=False), "threat_intel_enriched.csv", "text/csv")
+
 
 
 
