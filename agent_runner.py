@@ -23,36 +23,55 @@ if USE_LLM:
 
 SHA256_RE = re.compile(r"\b[a-fA-F0-9]{64}\b")
 
-def _heuristic_plan(query: str) -> Dict[str, Any]:
+def _heuristic_plan(query: str) -> dict:
     q = query.lower()
-    plan = {"need_feeds": True, "hours": 24, "keywords": [], "cves": [], "hashes": [], "actions": []}
+    plan = {
+        "need_feeds": True,
+        "hours": 24,  # default
+        "keywords": [],
+        "cves": [],
+        "hashes": [],
+        "actions": []
+    }
 
-    # Time window parsing
-    if "week" in q or "7 days" in q: 
-        plan["hours"] = 24*7
-    elif "144" in q or "6 days" in q: 
-        plan["hours"] = 24*6
-    elif "120" in q or "5 days" in q: 
-        plan["hours"] = 24*5
-    elif "96" in q or "4 days" in q: 
-        plan["hours"] = 96
-    elif "72" in q or "3 days" in q: 
-        plan["hours"] = 72
-    elif "48" in q or "2 days" in q: 
-        plan["hours"] = 48
-    elif "24" in q or "day" in q: 
-        plan["hours"] = 24
-    # extract keywords, CVEs, hashes
-    plan["cves"] = extract_cves(query)
-    plan["hashes"] = SHA256_RE.findall(query)
-    # naive keywords: words > 3 chars not CVE/hash
-    words = [w.strip(",.") for w in query.split() if len(w) > 3 and not w.startswith("CVE-")]
+    # --- Time window parsing ---
+    # Regex to capture "number + unit" like "72 hours", "5 days", "2 weeks", "1 month"
+    m = re.search(r"(\d+)\s*(hour|hours|day|days|week|weeks|month|months)", q)
+    if m:
+        num = int(m.group(1))
+        unit = m.group(2)
+        if "hour" in unit:
+            plan["hours"] = num
+        elif "day" in unit:
+            plan["hours"] = num * 24
+        elif "week" in unit:
+            plan["hours"] = num * 7 * 24
+        elif "month" in unit:
+            plan["hours"] = num * 30 * 24
+    else:
+        # --- Fallbacks only if no number is given ---
+        if "week" in q:
+            plan["hours"] = 7 * 24
+        elif "month" in q:
+            plan["hours"] = 30 * 24
+
+    # --- Keywords (basic) ---
+    words = [w.strip(",.") for w in query.split() if len(w) > 3 and not w.startswith("cve-")]
     plan["keywords"] = words[:5]
-    # actions gating
+
+    # --- CVEs and hashes extraction ---
+    from agent_tools import extract_cves
+    plan["cves"] = extract_cves(query)
+
+    SHA256_RE = re.compile(r"\b[a-fA-F0-9]{64}\b")
+    plan["hashes"] = SHA256_RE.findall(query)
+
+    # --- Action hints ---
     if "notify" in q or "slack" in q:
         plan["actions"].append("notify_slack")
     if "ticket" in q or "jira" in q or "create issue" in q:
         plan["actions"].append("create_jira")
+
     return plan
 
 def _summarize_heuristic(query, feeds, cve_details, kev_hits, epss_scores, hash_enrich):
@@ -155,3 +174,4 @@ Produce: 1) Executive summary (3 bullets). 2) Top items with links (<=5). 3) Rec
         "approved": approve
     }
     return {"summary_md": summary_md, "actions": actions, "executed": executed, "audit": audit}
+
